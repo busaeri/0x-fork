@@ -231,7 +231,7 @@ export const SELL_SOURCE_FILTER_BY_CHAIN_ID: Record<ChainId | 8453, SourceFilter
         ERC20BridgeSource.BalancerV2,
         ERC20BridgeSource.MultiHop,
         ERC20BridgeSource.WOOFi,
-        ERC20BridgeSource.Velodrome, // Aerodrome (fork of Velodrome)
+        ERC20BridgeSource.Aerodrome, // Native Aerodrome for Base Chain
     ]),
 };
 
@@ -394,7 +394,7 @@ export const BUY_SOURCE_FILTER_BY_CHAIN_ID: Record<ChainId | 8453, SourceFilters
         ERC20BridgeSource.BalancerV2,
         ERC20BridgeSource.MultiHop,
         ERC20BridgeSource.WOOFi,
-        ERC20BridgeSource.Velodrome, // Aerodrome (fork of Velodrome)
+        ERC20BridgeSource.Aerodrome, // Native Aerodrome for Base Chain
     ]),
 };
 
@@ -1912,6 +1912,12 @@ export const YOSHI_ROUTER_BY_CHAIN_ID = valueByChainId<string>(
 export const VELODROME_ROUTER_BY_CHAIN_ID = valueByChainId<string>(
     {
         [ChainId.Optimism]: '0xa132dab612db5cb9fc9ac426a0cc215a3423f9c9',
+    },
+    NULL_ADDRESS,
+);
+
+export const AERODROME_ROUTER_BY_CHAIN_ID = valueByChainId<string>(
+    {
         [8453]: '0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43', // Base Chain (Aerodrome)
     },
     NULL_ADDRESS,
@@ -2254,6 +2260,10 @@ export const DEFAULT_GAS_SCHEDULE: GasSchedule = {
     //
     [ERC20BridgeSource.Velodrome]: () => 160e3,
     [ERC20BridgeSource.Dystopia]: () => 160e3,
+    //
+    // Base
+    //
+    [ERC20BridgeSource.Aerodrome]: () => 160e3,
 };
 
 const DEFAULT_FEE_SCHEDULE: FeeSchedule = Object.keys(DEFAULT_GAS_SCHEDULE).reduce((acc, key) => {

@@ -508,6 +508,8 @@ export enum ERC20BridgeSource {
     Yoshi = 'Yoshi',
     // Optimism
     Velodrome = 'Velodrome',
+    // Base
+    Aerodrome = 'Aerodrome',
 }
 
 // Internal `fillData` field for `Fill` objects.

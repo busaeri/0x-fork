@@ -53,6 +53,7 @@ import {
     UNISWAPV1_ROUTER_BY_CHAIN_ID,
     UNISWAPV3_CONFIG_BY_CHAIN_ID,
     VELODROME_ROUTER_BY_CHAIN_ID,
+    AERODROME_ROUTER_BY_CHAIN_ID,
     WOOFI_ROUTER_BY_CHAIN_ID,
     WOOFI_SUPPORTED_TOKENS,
     ZERO_AMOUNT,
@@ -362,6 +363,36 @@ export class SamplerOperations {
             fillData: { tokenAddressPath, router },
             contract: this._samplerContract,
             function: this._samplerContract.sampleBuysFromUniswapV2,
+            params: [router, tokenAddressPath, makerFillAmounts],
+        });
+    }
+
+    public getAerodromeSellQuotes(
+        router: string,
+        tokenAddressPath: string[],
+        takerFillAmounts: BigNumber[],
+        source: ERC20BridgeSource = ERC20BridgeSource.Aerodrome,
+    ): SourceQuoteOperation<UniswapV2FillData> {
+        return new SamplerContractOperation({
+            source,
+            fillData: { tokenAddressPath, router },
+            contract: this._samplerContract,
+            function: this._samplerContract.sampleSellsFromAerodrome,
+            params: [router, tokenAddressPath, takerFillAmounts],
+        });
+    }
+
+    public getAerodromeBuyQuotes(
+        router: string,
+        tokenAddressPath: string[],
+        makerFillAmounts: BigNumber[],
+        source: ERC20BridgeSource = ERC20BridgeSource.Aerodrome,
+    ): SourceQuoteOperation<UniswapV2FillData> {
+        return new SamplerContractOperation({
+            source,
+            fillData: { tokenAddressPath, router },
+            contract: this._samplerContract,
+            function: this._samplerContract.sampleBuysFromAerodrome,
             params: [router, tokenAddressPath, makerFillAmounts],
         });
     }
@@ -1574,6 +1605,16 @@ export class SamplerOperations {
                             ...intermediateTokens.map((t) => [takerToken, t, makerToken]),
                         ].map((path) => this.getUniswapV2SellQuotes(uniLikeRouter, path, takerFillAmounts, source));
                     }
+                    case ERC20BridgeSource.Aerodrome: {
+                        const aerodromeRouter = AERODROME_ROUTER_BY_CHAIN_ID[this.chainId];
+                        if (!isValidAddress(aerodromeRouter)) {
+                            return [];
+                        }
+                        return [
+                            [takerToken, makerToken],
+                            ...intermediateTokens.map((t) => [takerToken, t, makerToken]),
+                        ].map((path) => this.getAerodromeSellQuotes(aerodromeRouter, path, takerFillAmounts, source));
+                    }
                     case ERC20BridgeSource.KyberDmm: {
                         const kyberDmmRouter = KYBER_DMM_ROUTER_BY_CHAIN_ID[this.chainId];
                         if (!isValidAddress(kyberDmmRouter)) {
@@ -1767,6 +1808,7 @@ export class SamplerOperations {
                         if (takerToken === AVALANCHE_TOKENS.MIM || makerToken === AVALANCHE_TOKENS.MIM) {
                             return [];
                         }
+
                         return this.getGMXSellQuotes(
                             GMX_ROUTER_BY_CHAIN_ID[this.chainId],
                             GMX_READER_BY_CHAIN_ID[this.chainId],
@@ -1803,6 +1845,11 @@ export class SamplerOperations {
                             address = VELODROME_ROUTER_BY_CHAIN_ID[this.chainId];
                         }
                         return this.getSolidlySellQuotes(source, address, takerToken, makerToken, takerFillAmounts);
+                    }
+                    case ERC20BridgeSource.Aerodrome: {
+                        const address = AERODROME_ROUTER_BY_CHAIN_ID[this.chainId];
+                        const tokenAddressPath = [takerToken, makerToken];
+                        return this.getUniswapV2SellQuotes(address, tokenAddressPath, takerFillAmounts, source);
                     }
                     case ERC20BridgeSource.Synthetix: {
                         const readProxy = SYNTHETIX_READ_PROXY_BY_CHAIN_ID[this.chainId];
@@ -1913,6 +1960,16 @@ export class SamplerOperations {
                             [takerToken, makerToken],
                             ...intermediateTokens.map((t) => [takerToken, t, makerToken]),
                         ].map((path) => this.getUniswapV2BuyQuotes(uniLikeRouter, path, makerFillAmounts, source));
+                    }
+                    case ERC20BridgeSource.Aerodrome: {
+                        const aerodromeRouter = AERODROME_ROUTER_BY_CHAIN_ID[this.chainId];
+                        if (!isValidAddress(aerodromeRouter)) {
+                            return [];
+                        }
+                        return [
+                            [takerToken, makerToken],
+                            ...intermediateTokens.map((t) => [takerToken, t, makerToken]),
+                        ].map((path) => this.getAerodromeBuyQuotes(aerodromeRouter, path, makerFillAmounts, source));
                     }
                     case ERC20BridgeSource.KyberDmm: {
                         const kyberDmmRouter = KYBER_DMM_ROUTER_BY_CHAIN_ID[this.chainId];
@@ -2135,6 +2192,11 @@ export class SamplerOperations {
                             address = VELODROME_ROUTER_BY_CHAIN_ID[this.chainId];
                         }
                         return this.getSolidlyBuyQuotes(source, address, takerToken, makerToken, makerFillAmounts);
+                    }
+                    case ERC20BridgeSource.Aerodrome: {
+                        const address = AERODROME_ROUTER_BY_CHAIN_ID[this.chainId];
+                        const tokenAddressPath = [takerToken, makerToken];
+                        return this.getUniswapV2BuyQuotes(address, tokenAddressPath, makerFillAmounts, source);
                     }
                     case ERC20BridgeSource.Synthetix: {
                         const readProxy = SYNTHETIX_READ_PROXY_BY_CHAIN_ID[this.chainId];

@@ -22,6 +22,7 @@ pragma experimental ABIEncoderV2;
 
 import "./AaveV2Sampler.sol";
 import "./AaveV3Sampler.sol";
+import "./AerodromeSampler.sol";
 import "./BalancerSampler.sol";
 import "./BalancerV2Sampler.sol";
 import "./BalancerV2BatchSampler.sol";
@@ -50,53 +51,54 @@ import "./WooPPSampler.sol";
 import "./UtilitySampler.sol";
 
 contract ERC20BridgeSampler is
-    AaveV2Sampler,
-    AaveV3Sampler,
-    BalancerSampler,
-    BalancerV2Sampler,
-    BalancerV2BatchSampler,
-    BancorSampler,
-    BancorV3Sampler,
-    CompoundSampler,
-    CurveSampler,
-    DODOSampler,
-    DODOV2Sampler,
-    GMXSampler,
-    KyberDmmSampler,
-    LidoSampler,
-    MakerPSMSampler,
-    MStableSampler,
-    MooniswapSampler,
-    NativeOrderSampler,
-    PlatypusSampler,
-    ShellSampler,
-    SynthetixSampler,
-    TwoHopSampler,
-    UniswapSampler,
-    UniswapV2Sampler,
-    UniswapV3Sampler,
-    VelodromeSampler,
-    WooPPSampler,
-    UtilitySampler
+  AaveV2Sampler,
+  AaveV3Sampler,
+  AerodromeSampler,
+  BalancerSampler,
+  BalancerV2Sampler,
+  BalancerV2BatchSampler,
+  BancorSampler,
+  BancorV3Sampler,
+  CompoundSampler,
+  CurveSampler,
+  DODOSampler,
+  DODOV2Sampler,
+  GMXSampler,
+  KyberDmmSampler,
+  LidoSampler,
+  MakerPSMSampler,
+  MStableSampler,
+  MooniswapSampler,
+  NativeOrderSampler,
+  PlatypusSampler,
+  ShellSampler,
+  SynthetixSampler,
+  TwoHopSampler,
+  UniswapSampler,
+  UniswapV2Sampler,
+  UniswapV3Sampler,
+  VelodromeSampler,
+  WooPPSampler,
+  UtilitySampler
 {
-    struct CallResults {
-        bytes data;
-        bool success;
-    }
+  struct CallResults {
+    bytes data;
+    bool success;
+  }
 
-    /// @dev Call multiple public functions on this contract in a single transaction.
-    /// @param callDatas ABI-encoded call data for each function call.
-    /// @return callResults ABI-encoded results data for each call.
-    function batchCall(bytes[] calldata callDatas) external returns (CallResults[] memory callResults) {
-        callResults = new CallResults[](callDatas.length);
-        for (uint256 i = 0; i != callDatas.length; ++i) {
-            callResults[i].success = true;
-            if (callDatas[i].length == 0) {
-                continue;
-            }
-            (callResults[i].success, callResults[i].data) = address(this).call(callDatas[i]);
-        }
+  /// @dev Call multiple public functions on this contract in a single transaction.
+  /// @param callDatas ABI-encoded call data for each function call.
+  /// @return callResults ABI-encoded results data for each call.
+  function batchCall(bytes[] calldata callDatas) external returns (CallResults[] memory callResults) {
+    callResults = new CallResults[](callDatas.length);
+    for (uint256 i = 0; i != callDatas.length; ++i) {
+      callResults[i].success = true;
+      if (callDatas[i].length == 0) {
+        continue;
+      }
+      (callResults[i].success, callResults[i].data) = address(this).call(callDatas[i]);
     }
+  }
 
-    receive() external payable {}
+  receive() external payable {}
 }

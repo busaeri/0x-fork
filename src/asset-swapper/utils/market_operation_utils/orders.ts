@@ -196,6 +196,8 @@ export function getErc20BridgeSourceToBridgeSource(source: ERC20BridgeSource): s
             return encodeBridgeSourceId(BridgeProtocol.BancorV3, 'BancorV3');
         case ERC20BridgeSource.Velodrome:
             return encodeBridgeSourceId(BridgeProtocol.Solidly, 'Velodrome');
+        case ERC20BridgeSource.Aerodrome:
+            return encodeBridgeSourceId(BridgeProtocol.Solidly, 'Aerodrome');
         case ERC20BridgeSource.Dystopia:
             return encodeBridgeSourceId(BridgeProtocol.Solidly, 'Dystopia');
         case ERC20BridgeSource.Synthetix:
@@ -401,6 +403,11 @@ export function createBridgeDataForBridgeOrder(order: OptimizedMarketBridgeOrder
             bridgeData = encoder.encode([velodromeFillData.router, velodromeFillData.stable]);
             break;
         }
+        case ERC20BridgeSource.Aerodrome: {
+            const aerodromeFillData = (order as OptimizedMarketBridgeOrder<VelodromeFillData>).fillData;
+            bridgeData = encoder.encode([aerodromeFillData.router, aerodromeFillData.stable]);
+            break;
+        }
         case ERC20BridgeSource.Synthetix: {
             const fillData = (order as OptimizedMarketBridgeOrder<SynthetixFillData>).fillData;
             bridgeData = encoder.encode([
@@ -521,6 +528,7 @@ const BRIDGE_ENCODERS: {
     [ERC20BridgeSource.AaveV3]: AbiEncoder.create('(address,address,bytes32)'),
     [ERC20BridgeSource.Compound]: AbiEncoder.create('(address)'),
     [ERC20BridgeSource.Velodrome]: AbiEncoder.create('(address,bool)'),
+    [ERC20BridgeSource.Aerodrome]: AbiEncoder.create('(address,bool)'),
     [ERC20BridgeSource.Dystopia]: AbiEncoder.create('(address,bool)'),
     [ERC20BridgeSource.Synthetix]: AbiEncoder.create('(address,bytes32,bytes32)'),
     [ERC20BridgeSource.WOOFi]: AbiEncoder.create('(address)'),
