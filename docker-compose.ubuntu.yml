@@ -1,0 +1,49 @@
+# Buat file docker-compose.ubuntu.yml
+version: "3"
+services:
+  postgres:
+    image: postgres:12
+    environment:
+      - POSTGRES_USER=api
+      - POSTGRES_PASSWORD=api
+      - POSTGRES_DB=api
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: always
+
+  ganache:
+    image: trufflesuite/ganache-cli:latest
+    ports:
+      - "8545:8545"
+    command: >
+      --gasLimit 30000000
+      --networkId 1
+      --chainId 1
+      --defaultBalanceEther 10000
+      --allowUnlimitedContractSize
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.ubuntu
+    depends_on:
+      - postgres
+      # Remove ganache dependency for Base chain
+    environment:
+      - CHAIN_ID=8453
+      - ETHEREUM_RPC_URL=https://base-mainnet.g.alchemy.com/v2/XQThs8cMbJ1DlLHkOqu8R
+      - ZERO_EX_GAS_API_URL=https://api.0x.org/sources?chainId=8453
+      - POSTGRES_URI=postgresql://api:api@postgres:5432/api
+      - HTTP_PORT=3000
+      - WHITELIST_ALL_TOKENS=true
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: always
+
+volumes:
+  pg_data:
