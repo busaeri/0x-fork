@@ -47,19 +47,21 @@ contract AerodromeSampler is SamplerUtils {
         view
         returns (uint256[] memory makerTokenAmounts)
     {
-        require(path.length == 2, "AerodromeSampler/INVALID_PATH_LENGTH");
+        require(path.length >= 2, "AerodromeSampler/INVALID_PATH_LENGTH");
         
         uint256 numSamples = takerTokenAmounts.length;
         makerTokenAmounts = new uint256[](numSamples);
         
-        // Create route for Aerodrome (try both stable and volatile)
-        AerodromeRoute[] memory routes = new AerodromeRoute[](1);
-        routes[0] = AerodromeRoute({
-            from: path[0],
-            to: path[1], 
-            stable: false, // Try volatile first
-            factory: address(0) // Let router use default factory
-        });
+        // Create routes for Aerodrome multi-hop
+        AerodromeRoute[] memory routes = new AerodromeRoute[](path.length - 1);
+        for (uint256 i = 0; i < path.length - 1; i++) {
+            routes[i] = AerodromeRoute({
+                from: path[i],
+                to: path[i + 1], 
+                stable: false, // Try volatile first
+                factory: address(0) // Let router use default factory
+            });
+        }
 
         for (uint256 i = 0; i < numSamples; i++) {
             if (takerTokenAmounts[i] == 0) {
@@ -74,8 +76,10 @@ contract AerodromeSampler is SamplerUtils {
             ) returns (uint256 amount) {
                 makerTokenAmounts[i] = amount;
             } catch (bytes memory) {
-                // Try stable pool if volatile fails
-                routes[0].stable = true;
+                // Try stable pools if volatile fails
+                for (uint256 j = 0; j < routes.length; j++) {
+                    routes[j].stable = true;
+                }
                 try this._sampleSellFromAerodrome(
                     router,
                     takerTokenAmounts[i],
@@ -86,7 +90,9 @@ contract AerodromeSampler is SamplerUtils {
                     makerTokenAmounts[i] = 0;
                 }
                 // Reset to volatile for next iteration
-                routes[0].stable = false;
+                for (uint256 j = 0; j < routes.length; j++) {
+                    routes[j].stable = false;
+                }
             }
         }
     }
@@ -105,19 +111,22 @@ contract AerodromeSampler is SamplerUtils {
         view
         returns (uint256[] memory takerTokenAmounts)
     {
-        require(path.length == 2, "AerodromeSampler/INVALID_PATH_LENGTH");
+        require(path.length >= 2, "AerodromeSampler/INVALID_PATH_LENGTH");
         
         uint256 numSamples = makerTokenAmounts.length;
         takerTokenAmounts = new uint256[](numSamples);
         
         // For buy quotes, we need to reverse the path
-        AerodromeRoute[] memory routes = new AerodromeRoute[](1);
-        routes[0] = AerodromeRoute({
-            from: path[1], // Reversed for buy
-            to: path[0],   // Reversed for buy
-            stable: false,
-            factory: address(0)
-        });
+        AerodromeRoute[] memory routes = new AerodromeRoute[](path.length - 1);
+        for (uint256 i = 0; i < path.length - 1; i++) {
+            uint256 reverseIndex = path.length - 2 - i;
+            routes[i] = AerodromeRoute({
+                from: path[reverseIndex + 1], // Reversed for buy
+                to: path[reverseIndex],       // Reversed for buy
+                stable: false,
+                factory: address(0)
+            });
+        }
 
         for (uint256 i = 0; i < numSamples; i++) {
             if (makerTokenAmounts[i] == 0) {
@@ -132,8 +141,10 @@ contract AerodromeSampler is SamplerUtils {
             ) returns (uint256 amount) {
                 takerTokenAmounts[i] = amount;
             } catch (bytes memory) {
-                // Try stable pool if volatile fails
-                routes[0].stable = true;
+                // Try stable pools if volatile fails
+                for (uint256 j = 0; j < routes.length; j++) {
+                    routes[j].stable = true;
+                }
                 try this._sampleBuyFromAerodrome(
                     router,
                     makerTokenAmounts[i],
@@ -144,7 +155,9 @@ contract AerodromeSampler is SamplerUtils {
                     takerTokenAmounts[i] = 0;
                 }
                 // Reset to volatile for next iteration
-                routes[0].stable = false;
+                for (uint256 j = 0; j < routes.length; j++) {
+                    routes[j].stable = false;
+                }
             }
         }
     }
