@@ -35,7 +35,7 @@ COPY --from=yarn-install /usr/src/app/node_modules /usr/src/app/node_modules
 
 # Copy package.json and contract addresses patch first (for Base chain support)
 COPY package.json ./
-COPY src/contract_addresses_patch.js ./src/
+# COPY src/contract_addresses_patch.js ./src/
 
 # Bundle app source
 COPY . .
