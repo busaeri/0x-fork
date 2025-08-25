@@ -462,6 +462,7 @@ export enum ERC20BridgeSource {
     Component = 'Component',
     Saddle = 'Saddle',
     UniswapV3 = 'Uniswap_V3',
+    UniswapV4 = 'Uniswap_V4',
     CurveV2 = 'Curve_V2',
     Lido = 'Lido',
     ShibaSwap = 'ShibaSwap',

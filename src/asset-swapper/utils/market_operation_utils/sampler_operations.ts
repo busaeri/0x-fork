@@ -4,6 +4,7 @@ import { BigNumber, logUtils } from '@0x/utils';
 import { formatBytes32String } from '@ethersproject/strings';
 import * as _ from 'lodash';
 import { UniswapV3Sampler } from '../../../samplers/uniswapv3_sampler';
+import { UniswapV4Sampler } from '../../../samplers/uniswapv4_sampler';
 
 import { ERC20BridgeSamplerContract } from '../../../wrappers';
 import { SamplerCallResult, ERC20BridgeSource, FeeSchedule, SignedLimitOrder, FillData } from '../../types';
@@ -52,6 +53,7 @@ import {
     SYNTHETIX_READ_PROXY_BY_CHAIN_ID,
     UNISWAPV1_ROUTER_BY_CHAIN_ID,
     UNISWAPV3_CONFIG_BY_CHAIN_ID,
+    UNISWAPV4_CONFIG_BY_CHAIN_ID,
     VELODROME_ROUTER_BY_CHAIN_ID,
     AERODROME_ROUTER_BY_CHAIN_ID,
     WOOFI_ROUTER_BY_CHAIN_ID,
@@ -129,6 +131,7 @@ export class SamplerOperations {
         };
     }
     private readonly uniswapV3Sampler: UniswapV3Sampler;
+    private readonly uniswapV4Sampler: UniswapV4Sampler;
 
     constructor(
         public readonly chainId: ChainId,
@@ -170,6 +173,7 @@ export class SamplerOperations {
             .catch(/* do nothing */);
 
         this.uniswapV3Sampler = new UniswapV3Sampler(this.chainId, this._samplerContract);
+        this.uniswapV4Sampler = new UniswapV4Sampler(this.chainId, this._samplerContract);
     }
 
     public getTokenDecimals(tokens: string[]): BatchedOperation<BigNumber[]> {
@@ -1745,6 +1749,22 @@ export class SamplerOperations {
                             ...intermediateTokens.map((t) => [takerToken, t, makerToken]),
                         ].map((path) => this.uniswapV3Sampler.createSampleSellsOperation(path, takerFillAmounts));
                     }
+                    case ERC20BridgeSource.UniswapV4: {
+                        // Rebasing tokens lead to a high revert rate.
+                        if (REBASING_TOKENS.has(takerToken) || REBASING_TOKENS.has(makerToken)) {
+                            return [];
+                        }
+                        const { poolManager, router } = UNISWAPV4_CONFIG_BY_CHAIN_ID[this.chainId];
+                        if (!isValidAddress(router) || !isValidAddress(poolManager)) {
+                            // UniswapV4 not deployed on this chain yet
+                            return [];
+                        }
+                        // Use UniswapV4 sampler for native V4 support
+                        return [
+                            [takerToken, makerToken],
+                            ...intermediateTokens.map((t) => [takerToken, t, makerToken]),
+                        ].map((path) => this.uniswapV4Sampler.createSampleSellsOperation(path, takerFillAmounts));
+                    }
                     case ERC20BridgeSource.Lido: {
                         if (!this._isLidoSupported(takerToken, makerToken)) {
                             return [];
@@ -2100,6 +2120,22 @@ export class SamplerOperations {
                             [takerToken, makerToken],
                             ...intermediateTokens.map((t) => [takerToken, t, makerToken]),
                         ].map((path) => this.uniswapV3Sampler.createSampleBuysOperation(path, makerFillAmounts));
+                    }
+                    case ERC20BridgeSource.UniswapV4: {
+                        // Rebasing tokens lead to a high revert rate.
+                        if (REBASING_TOKENS.has(takerToken) || REBASING_TOKENS.has(makerToken)) {
+                            return [];
+                        }
+                        const { poolManager, router } = UNISWAPV4_CONFIG_BY_CHAIN_ID[this.chainId];
+                        if (!isValidAddress(router) || !isValidAddress(poolManager)) {
+                            // UniswapV4 not deployed on this chain yet
+                            return [];
+                        }
+                        // Use UniswapV4 sampler for native V4 support
+                        return [
+                            [takerToken, makerToken],
+                            ...intermediateTokens.map((t) => [takerToken, t, makerToken]),
+                        ].map((path) => this.uniswapV4Sampler.createSampleBuysOperation(path, makerFillAmounts));
                     }
                     case ERC20BridgeSource.Lido: {
                         if (!this._isLidoSupported(takerToken, makerToken)) {

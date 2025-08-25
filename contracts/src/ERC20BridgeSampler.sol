@@ -46,6 +46,7 @@ import "./TwoHopSampler.sol";
 import "./UniswapSampler.sol";
 import "./UniswapV2Sampler.sol";
 import "./UniswapV3Sampler.sol";
+import "./UniswapV4Sampler.sol";
 import "./VelodromeSampler.sol";
 import "./WooPPSampler.sol";
 import "./UtilitySampler.sol";
@@ -77,6 +78,7 @@ contract ERC20BridgeSampler is
   UniswapSampler,
   UniswapV2Sampler,
   UniswapV3Sampler,
+  UniswapV4Sampler,
   VelodromeSampler,
   WooPPSampler,
   UtilitySampler

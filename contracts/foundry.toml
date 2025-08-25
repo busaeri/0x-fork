@@ -4,6 +4,7 @@ out = 'foundry-artifacts'
 test = 'test'
 path_pattern = '*.t.sol'
 libs = ["lib"]
+solc = "0.6.12"
 remappings = [
     '@0x/contracts-utils/=../node_modules/@0x/contracts-utils/',
     '@0x/contracts-erc20/=../node_modules/@0x/contracts-erc20/',
